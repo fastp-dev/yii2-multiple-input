@@ -35,9 +35,9 @@ class TabularColumn extends BaseColumn
         $elementName = '[' . $index . '][' . $this->name . ']';
         $prefix = $withPrefix ? $this->getModel()->formName() : '';
 
-        return $prefix . $elementName . (empty($this->nameSuffix) ? '' : ('_' . $this->nameSuffix));
+        return $prefix . (empty($this->namePrefix) ? '' : ('' . $this->namePrefix)) . $elementName . (empty($this->nameSuffix) ? '' : ('_' . $this->nameSuffix));
     }
-
+    
     /**
      * Returns first error of the current model.
      *
