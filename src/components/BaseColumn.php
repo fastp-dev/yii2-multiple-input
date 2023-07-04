@@ -133,6 +133,12 @@ abstract class BaseColumn extends BaseObject
     public $nameSuffix;
 
     /**
+     * @var string the unique prefix for attribute's name when using multiple widgets
+     */
+    
+    public $namePrefix;
+
+    /**
      * @var array|\Closure the HTML attributes for the indivdual table body column. This can be either an array
      * specifying the common HTML attributes for indivdual body column, or an anonymous function that
      * returns an array of the HTML attributes. It should have the following signature:
