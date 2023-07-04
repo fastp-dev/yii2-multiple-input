@@ -6,7 +6,7 @@ use unclead\multipleinput\examples\models\ExampleModel;
 use yii\helpers\Html;
 use unclead\multipleinput\MultipleInputColumn;
 
-
+//OK
 /* @var $this \yii\web\View */
 /* @var $model ExampleModel */
 
