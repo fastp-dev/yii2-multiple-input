@@ -323,7 +323,8 @@
 
             let id = getInputId($element);
             if (id) {
-                let columnName = id.replace(settings.inputId, '').replace(/-\d+-?/, '');
+                let parts = id.split('-');
+                let columnName = parts[parts.length - 1];
 
                 if (rowValues.hasOwnProperty(columnName)) {
                     let tag = $element.get(0).tagName;
