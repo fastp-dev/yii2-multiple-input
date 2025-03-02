@@ -57,6 +57,10 @@ class TableRenderer extends BaseRenderer
     public function renderHeader()
     {
         $cells = [];
+        if ($this->isAddButtonPositionRowBegin()) {
+            $cells[] = $this->renderButtonHeaderCell();
+        }
+
         foreach ($this->columns as $column) {
             /* @var $column BaseColumn */
             $cells[] = $this->renderHeaderCell($column);
@@ -94,6 +98,10 @@ class TableRenderer extends BaseRenderer
         }
 
         if ($this->cloneButton) {
+            $columnsCount++;
+        }
+
+        if ($this->isAddButtonPositionRowBegin()) {
             $columnsCount++;
         }
 
@@ -167,27 +175,7 @@ class TableRenderer extends BaseRenderer
      */
     protected function renderBody()
     {
-        $rows = [];
-
-        if ($this->data) {
-            $j = 0;
-            foreach ($this->data as $index => $item) {
-                if ($j++ <= $this->max) {
-                    $rows[] = $this->renderRowContent($index, $item);
-                } else {
-                    break;
-                }
-            }
-            for ($i = $j; $i < $this->min; $i++) {
-                $rows[] = $this->renderRowContent($i);
-            }
-        } elseif ($this->min > 0) {
-            for ($i = 0; $i < $this->min; $i++) {
-                $rows[] = $this->renderRowContent($i);
-            }
-        }
-
-        return Html::tag('tbody', implode("\n", $rows));
+        return Html::tag('tbody', implode("\n", $this->renderRows()));
     }
 
     /**
@@ -198,13 +186,13 @@ class TableRenderer extends BaseRenderer
      * @return mixed
      * @throws InvalidConfigException
      */
-    private function renderRowContent($index = null, $item = null)
+    protected function renderRowContent($index = null, $item = null, $rowIndex = null)
     {
         $cells = [];
         $hiddenInputs = [];
-        $isLastRow = $this->max === $this->min;
-        if (!$isLastRow && $this->isAddButtonPositionRowBegin()) {
-            $cells[] = $this->renderActionColumn($index, $item, true);
+
+        if (!$this->isFixedNumberOfRows() && $this->isAddButtonPositionRowBegin()) {
+            $cells[] = $this->renderActionColumn($index, $item, $rowIndex, true);
         }
 
         $columnIndex = 0;
@@ -217,12 +205,13 @@ class TableRenderer extends BaseRenderer
                 $cells[] = $this->renderCellContent($column, $index, $columnIndex++);
             }
         }
+
         if ($this->cloneButton) {
             $cells[] = $this->renderCloneColumn();
         }
 
-        if (!$isLastRow) {
-            $cells[] = $this->renderActionColumn($index, $item);
+        if (!$this->isFixedNumberOfRows()) {
+            $cells[] = $this->renderActionColumn($index, $item, $rowIndex);
         }
 
         if ($hiddenInputs) {
@@ -268,6 +257,8 @@ class TableRenderer extends BaseRenderer
      * @param int|null $index
      * @param int|null $columnIndex
      * @return string
+     *
+     * @todo rethink visibility level (make it private)
      */
     public function renderCellContent($column, $index, $columnIndex = null)
     {
@@ -283,7 +274,6 @@ class TableRenderer extends BaseRenderer
         if ($column->type === BaseColumn::TYPE_DRAGCOLUMN) {
             $options = ArrayHelper::merge($options, ['class' => $this->iconMap['drag-handle']]);
         }
-
 
         $input = $column->renderInput($name, $options, [
             'id' => $id,
@@ -336,14 +326,19 @@ class TableRenderer extends BaseRenderer
     /**
      * Renders the action column.
      *
-     * @param null|int $index
+     * @param null|int|string $index
      * @param null|ActiveRecordInterface|array $item
-     * @param bool $isFirstColumn
+     * @param int $rowIndex
      * @return string
      */
-    private function renderActionColumn($index = null, $item = null, $isFirstColumn = false)
+    private function renderActionColumn(
+        $index = null,
+        $item = null,
+        $rowIndex = null,
+        $isFirstColumn = false
+    )
     {
-        $content = $this->getActionButton($index, $isFirstColumn) . $this->getExtraButtons($index, $item);
+        $content = $this->getActionButton($index, $rowIndex, $isFirstColumn) . $this->getExtraButtons($index, $item);
 
         return Html::tag('td', $content, [
             'class' => 'list-cell__button',
@@ -362,7 +357,12 @@ class TableRenderer extends BaseRenderer
         ]);
     }
 
-    private function getActionButton($index, $isFirstColumn)
+    /**
+     * @param int|string|null $index
+     * @param int $rowIndex
+     * @return string
+     */
+    private function getActionButton($index = null, $rowIndex = null, $isFirstColumn = false)
     {
         if ($index === null || $this->min === 0) {
             if ($isFirstColumn) {
@@ -372,15 +372,18 @@ class TableRenderer extends BaseRenderer
             return $this->isAddButtonPositionRowBegin() ? '' : $this->renderRemoveButton();
         }
 
-        $index++;
-        if ($index < $this->min) {
+        // rowIndex is zero-based, so we have to increment it to properly cpmpare it with min number of rows
+        $rowIndex++;
+
+        if ($rowIndex < $this->min) {
             return '';
         }
 
-        if ($index === $this->min) {
+        if ($rowIndex === $this->min) {
             if ($isFirstColumn) {
                 return $this->isAddButtonPositionRowBegin() ? $this->renderAddButton() : '';
             }
+
 
             return $this->isAddButtonPositionRow() ? $this->renderAddButton() : '';
         }

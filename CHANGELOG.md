@@ -1,8 +1,23 @@
 Yii2 multiple input change log
 ==============================
 
-2.28.0 (in development)
+2.30.0 (in development)
 =======================
+- #363 fix rendering header and footer in case of using POS_ROWS_BEGIN in TableRenderer (unclead)
+
+2.30.0
+=======================
+- #369 fix rendering action buttons in case the dataset contains non-numeric indices (unclead)
+
+2.29.0
+=======================
+- fix addind active form fields doesn't work properly in case of 10 rows and more (unclead)
+- revert changes in normalize method because it affected ajax validation
+- fix addind active form fields in nested columns (unclead) 
+
+2.28.0
+=======================
+- replace outdated jquery-sortable.js with a modern alternative (sortable.js) (sankam-nikolya)
 
 2.27.0
 ======

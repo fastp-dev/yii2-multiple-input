@@ -371,15 +371,6 @@
             $newRow.hide().appendTo(inputList).fadeIn(300);
         }
 
-        // in order to initialize an active form attribute we need to find an input wrapper and we can do it
-        // only after adding a new rows to dom tree
-        if (isActiveFormEnabled) {
-            $newRow.find('input, select, textarea').each(function (index, element) {
-                let $element = $(element);
-                addActiveFormAttribute($element);
-            });
-        }
-
         let jsTemplate = null;
         for (var i in settings.jsTemplates) {
             jsTemplate = settings.jsTemplates[i];
@@ -387,6 +378,15 @@
             jsTemplate = replaceAll('%7B' + settings.indexPlaceholder + '%7D', newRowIndex, jsTemplate);
 
             window.eval(jsTemplate);
+        }
+
+        // in order to initialize an active form attribute we need to find an input wrapper and we can do it
+        // only after adding a new rows to dom tree
+        if (isActiveFormEnabled) {
+            $newRow.find('input, select, textarea').each(function (index, element) {
+                let $element = $(element);
+                addActiveFormAttribute($element);
+            });
         }
 
         $wrapper.data('multipleInput').currentIndex = newRowIndex;
@@ -464,8 +464,8 @@
         } else {
             // fallback in case of using flatten widget - just remove all digital indexes
             // and check whether attribute exists or not.
-            bareId = replaceAll(/-\d-/, '-', bareId);
-            bareId = replaceAll(/-\d/, '', bareId);
+            bareId = replaceAll(/-\d+-/, '-', bareId);
+            bareId = replaceAll(/-\d+/, '', bareId);
             if (data.settings.attributes.hasOwnProperty(bareId)) {
                 attributeOptions = data.settings.attributes[bareId];
             }

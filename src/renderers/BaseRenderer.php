@@ -437,31 +437,27 @@ abstract class BaseRenderer extends BaseObject implements RendererInterface
 
         // todo override when ListRenderer will use div markup
         $options = Json::encode($this->getJsSortableOptions());
-        $js = "$('#{$this->id} .multiple-input-list').sorting($options);";
+        $js = "new Sortable(document.getElementById('{$this->id}').querySelector('.multiple-input-list tbody'), {$options});";
         $view->registerJs($js);
     }
 
     /**
      * Returns an array of JQuery sortable plugin options.
      * You can override this method extend plugin behaviour.
-     * 
+     *
      * @return array
      */
     protected function getJsSortableOptions()
     {
         return [
-            'containerSelector' => 'table',
-            'itemPath'          => '> tbody',
-            'itemSelector'      => 'tr',
-            'placeholder'       => '<tr class="placeholder">',
-            'handle'            => '.drag-handle',
-            'onDrop'            => new \yii\web\JsExpression("
-                function(item, container, _super, event) {
-                    _super(item, container, _super, event);
-
-                    var wrapper = item.closest('.multiple-input').first();
-                    event = $.Event('afterDropRow');
-                    wrapper.trigger(event, [item]);
+            'handle' => '.drag-handle',
+            'draggable' => '.multiple-input-list__item',
+            'onEnd'  => new \yii\web\JsExpression("
+                function(event) {
+                    var item = $(event.item),
+                        wrapper = item.closest('.multiple-input').first(),
+                        trigeredEvent = $.Event('afterDropRow');
+                    wrapper.trigger(trigeredEvent, [item]);
                 }
             ")
         ];
@@ -516,6 +512,11 @@ abstract class BaseRenderer extends BaseObject implements RendererInterface
     protected function isAddButtonPositionRowBegin()
     {
         return in_array(self::POS_ROW_BEGIN, $this->addButtonPosition);
+    }
+
+    protected function isFixedNumberOfRows()
+    {
+        return $this->max === $this->min;
     }
 
     private function prepareIndexPlaceholder()
@@ -583,4 +584,31 @@ abstract class BaseRenderer extends BaseObject implements RendererInterface
         return $this->theme === self::THEME_BS;
     }
 
+    protected function renderRows()
+    {
+        $rows = [];
+
+        $rowIndex = 0;
+        if ($this->data) {
+            foreach ($this->data as $index => $item) {
+                if ($rowIndex <= $this->max) {
+                    $rows[] = $this->renderRowContent($index, $item, $rowIndex);
+                } else {
+                    break;
+                }
+                $rowIndex++;
+            }
+            for (; $rowIndex < $this->min; $rowIndex++) {
+                $rows[] = $this->renderRowContent($rowIndex, null, $rowIndex);
+            }
+        } elseif ($this->min > 0) {
+            for (; $rowIndex < $this->min; $rowIndex++) {
+                $rows[] = $this->renderRowContent($rowIndex, null, $rowIndex);
+            }
+        }
+
+        return $rows;
+    }
+
+    abstract protected function renderRowContent($index = null, $item = null, $rowIndex = null);
 }
